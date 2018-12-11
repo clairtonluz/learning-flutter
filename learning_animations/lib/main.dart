@@ -1,19 +1,31 @@
 import 'package:flutter/animation.dart';
 import 'package:flutter/material.dart';
 
-class AnimatedLogo extends AnimatedWidget {
-  AnimatedLogo({Key key, Animation<double> animation})
-      : super(key: key, listenable: animation);
+class LogoWidget extends StatelessWidget {
+  // Leave out the height and width so it fills the animating parent
+  build(BuildContext context) {
+    return Container(
+      margin: EdgeInsets.symmetric(vertical: 10.0),
+      child: FlutterLogo(),
+    );
+  }
+}
+
+class GrowTransition extends StatelessWidget {
+  GrowTransition({this.child, this.animation});
+
+  final Widget child;
+  final Animation<double> animation;
 
   Widget build(BuildContext context) {
-    final Animation<double> animation = listenable;
     return Center(
-      child: Container(
-        margin: EdgeInsets.symmetric(vertical: 10.0),
-        height: animation.value,
-        width: animation.value,
-        child: FlutterLogo(),
-      ),
+      child: AnimatedBuilder(
+          animation: animation,
+          builder: (BuildContext context, Widget child) {
+            return Container(
+                height: animation.value, width: animation.value, child: child);
+          },
+          child: child),
     );
   }
 }
@@ -22,7 +34,7 @@ class LogoApp extends StatefulWidget {
   _LogoAppState createState() => _LogoAppState();
 }
 
-class _LogoAppState extends State<LogoApp> with SingleTickerProviderStateMixin {
+class _LogoAppState extends State<LogoApp> with TickerProviderStateMixin {
   Animation<double> animation;
   AnimationController controller;
 
@@ -30,7 +42,9 @@ class _LogoAppState extends State<LogoApp> with SingleTickerProviderStateMixin {
     super.initState();
     controller = AnimationController(
         duration: const Duration(milliseconds: 2000), vsync: this);
-    animation = Tween(begin: 0.0, end: 300.0).animate(controller);
+    final CurvedAnimation curve =
+        CurvedAnimation(parent: controller, curve: Curves.easeIn);
+    animation = Tween(begin: 0.0, end: 300.0).animate(curve);
     animation.addStatusListener((state) {
       if (state == AnimationStatus.completed) {
         controller.reverse();
@@ -42,7 +56,7 @@ class _LogoAppState extends State<LogoApp> with SingleTickerProviderStateMixin {
   }
 
   Widget build(BuildContext context) {
-    return AnimatedLogo(animation: animation);
+    return GrowTransition(child: LogoWidget(), animation: animation);
   }
 
   dispose() {
