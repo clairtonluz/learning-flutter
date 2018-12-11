@@ -1,31 +1,26 @@
 import 'package:flutter/animation.dart';
 import 'package:flutter/material.dart';
 
-class LogoWidget extends StatelessWidget {
-  // Leave out the height and width so it fills the animating parent
-  build(BuildContext context) {
-    return Container(
-      margin: EdgeInsets.symmetric(vertical: 10.0),
-      child: FlutterLogo(),
-    );
-  }
-}
+class AnimatedLogo extends AnimatedWidget {
+  // Make the Tweens static because they don't change.
+  static final _opacityTween = Tween<double>(begin: 0.1, end: 1.0);
+  static final _sizeTween = Tween<double>(begin: 0.0, end: 300.0);
 
-class GrowTransition extends StatelessWidget {
-  GrowTransition({this.child, this.animation});
-
-  final Widget child;
-  final Animation<double> animation;
+  AnimatedLogo({Key key, Animation<double> animation})
+      : super(key: key, listenable: animation);
 
   Widget build(BuildContext context) {
+    final Animation<double> animation = listenable;
     return Center(
-      child: AnimatedBuilder(
-          animation: animation,
-          builder: (BuildContext context, Widget child) {
-            return Container(
-                height: animation.value, width: animation.value, child: child);
-          },
-          child: child),
+      child: Opacity(
+        opacity: _opacityTween.evaluate(animation),
+        child: Container(
+          margin: EdgeInsets.symmetric(vertical: 10.0),
+          height: _sizeTween.evaluate(animation),
+          width: _sizeTween.evaluate(animation),
+          child: FlutterLogo(),
+        ),
+      ),
     );
   }
 }
@@ -34,29 +29,29 @@ class LogoApp extends StatefulWidget {
   _LogoAppState createState() => _LogoAppState();
 }
 
-class _LogoAppState extends State<LogoApp> with TickerProviderStateMixin {
-  Animation<double> animation;
+class _LogoAppState extends State<LogoApp> with SingleTickerProviderStateMixin {
   AnimationController controller;
+  Animation<double> animation;
 
   initState() {
     super.initState();
     controller = AnimationController(
         duration: const Duration(milliseconds: 2000), vsync: this);
-    final CurvedAnimation curve =
-        CurvedAnimation(parent: controller, curve: Curves.easeIn);
-    animation = Tween(begin: 0.0, end: 300.0).animate(curve);
-    animation.addStatusListener((state) {
-      if (state == AnimationStatus.completed) {
+    animation = CurvedAnimation(parent: controller, curve: Curves.easeIn);
+
+    animation.addStatusListener((status) {
+      if (status == AnimationStatus.completed) {
         controller.reverse();
-      } else if (state == AnimationStatus.dismissed) {
+      } else if (status == AnimationStatus.dismissed) {
         controller.forward();
       }
     });
+
     controller.forward();
   }
 
   Widget build(BuildContext context) {
-    return GrowTransition(child: LogoWidget(), animation: animation);
+    return AnimatedLogo(animation: animation);
   }
 
   dispose() {
