@@ -1,7 +1,6 @@
 import 'package:flutter/animation.dart';
 import 'package:flutter/material.dart';
 
-
 class AnimatedLogo extends AnimatedWidget {
   AnimatedLogo({Key key, Animation<double> animation})
       : super(key: key, listenable: animation);
@@ -31,18 +30,19 @@ class _LogoAppState extends State<LogoApp> with SingleTickerProviderStateMixin {
     super.initState();
     controller = AnimationController(
         duration: const Duration(milliseconds: 2000), vsync: this);
-    animation = Tween(begin: 0.0, end: 300.0).animate(controller)
-      ..addListener(() {
-        setState(() {});
-      });
+    animation = Tween(begin: 0.0, end: 300.0).animate(controller);
+    animation.addStatusListener((state) {
+      if (state == AnimationStatus.completed) {
+        controller.reverse();
+      } else if (state == AnimationStatus.dismissed) {
+        controller.forward();
+      }
+    });
     controller.forward();
   }
 
   Widget build(BuildContext context) {
-    return GestureDetector(
-          onTap: () => controller.reverse(),
-          child: AnimatedLogo(animation: animation),
-        );
+    return AnimatedLogo(animation: animation);
   }
 
   dispose() {
